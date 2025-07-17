@@ -47,7 +47,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: dividendos-logs
-        path: |
-          *.log
-          *.txt
+        path: logs/
         retention-days: 7
