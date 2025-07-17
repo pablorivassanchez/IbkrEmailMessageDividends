@@ -1,0 +1,8 @@
+# Dependencias esenciales para IBKR Flex Query
+requests>=2.31.0
+pandas>=2.0.0
+pytest
+beautifulsoup4
+pytest-sugar
+mailjet-rest
+python-dotenv
