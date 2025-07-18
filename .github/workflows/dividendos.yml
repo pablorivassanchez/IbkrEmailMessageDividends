@@ -2,7 +2,7 @@ name: Dividendos IBKR Daily
 
 on:
   schedule:
-    # Ejecutar todos los días a las 09:00 UTC (ajusta según tu zona horaria)
+    # Ejecutar todos los días a las 10:00 UTC (ajusta según tu zona horaria)
     - cron: '0 10 * * *'
   workflow_dispatch:  # Permite ejecución manual
 
