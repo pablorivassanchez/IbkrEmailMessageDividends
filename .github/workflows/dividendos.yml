@@ -1,0 +1,80 @@
+name: Dividendos IBKR Daily
+
+on:
+  schedule:
+    # Ejecutar todos los días a las 10:00 UTC (ajusta según tu zona horaria)
+    - cron: '0 10 * * *'
+  workflow_dispatch:  # Permite ejecución manual
+
+jobs:
+  run-dividendos:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Debug environment variables
+      env:
+        IBKR_FLEX_TOKEN: ${{ secrets.IBKR_FLEX_TOKEN }}
+        IBKR_DIVIDENDS_QUERY_ID: ${{ secrets.IBKR_DIVIDENDS_QUERY_ID }}
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+        RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+        SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+        SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        IBKR_USERNAME: ${{ secrets.IBKR_USERNAME }}
+        IBKR_PASSWORD: ${{ secrets.IBKR_PASSWORD }}
+        EMAIL_USER: ${{ secrets.EMAIL_USER }}
+        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+      run: |
+        echo "=== Verificando secrets ==="
+        echo "IBKR_FLEX_TOKEN: ${IBKR_FLEX_TOKEN:+SET}"
+        echo "IBKR_DIVIDENDS_QUERY_ID: ${IBKR_DIVIDENDS_QUERY_ID:+SET}"
+        echo "SMTP_SERVER: ${SMTP_SERVER:+SET}"
+        echo "SMTP_PORT: ${SMTP_PORT:+SET}"
+        echo "SENDER_EMAIL: ${SENDER_EMAIL:+SET}"
+        echo "RECIPIENT_EMAIL: ${RECIPIENT_EMAIL:+SET}"
+        echo "SMTP_USERNAME: ${SMTP_USERNAME:+SET}"
+        echo "SMTP_PASSWORD: ${SMTP_PASSWORD:+SET}"
+        echo "IBKR_USERNAME: ${IBKR_USERNAME:+SET}"
+        echo "IBKR_PASSWORD: ${IBKR_PASSWORD:+SET}"
+        echo "EMAIL_USER: ${EMAIL_USER:+SET}"
+        echo "EMAIL_PASSWORD: ${EMAIL_PASSWORD:+SET}"
+        echo "=== Fin verificación ==="
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run dividendos script
+      env:
+        IBKR_FLEX_TOKEN: ${{ secrets.IBKR_FLEX_TOKEN }}
+        IBKR_DIVIDENDS_QUERY_ID: ${{ secrets.IBKR_DIVIDENDS_QUERY_ID }}
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+        RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+        SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+        SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        IBKR_USERNAME: ${{ secrets.IBKR_USERNAME }}
+        IBKR_PASSWORD: ${{ secrets.IBKR_PASSWORD }}
+        EMAIL_USER: ${{ secrets.EMAIL_USER }}
+        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        # Añade más variables según necesites
+      run: |
+        python main.py
+        
+    - name: Upload logs (optional)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: dividendos-logs
+        path: logs/
+        retention-days: 7
