@@ -6,31 +6,31 @@ from logger import setup_logger
 from dotenv import load_dotenv
 import os
 
-# Cargar .env desde el directorio donde está main.py
+# Load .env from the directory where main.py is located
 env_path = os.path.join(os.path.dirname(__file__), '.env')
-# Añade override=True para asegurar que los valores del .env se usen siempre
+# Add override=True to ensure that the values from the .env file are always used
 load_dotenv(dotenv_path=env_path, override=True)
 
 def main():
     setup_logger()
     logger = logging.getLogger(__name__)
-    logger.info("Iniciando servicio de dividendos")
+    logger.info("Starting dividend service")
 
     try:
-        today = datetime.now().strftime("%Y-%m-%d")  # Formato esperado por la función de email
+        today = datetime.now().strftime("%Y-%m-%d")  # Expected format by the email function
         
-        # Obtener todos los dividendos desde IBKR
+        # Get all dividends from IBKR
         dividends = get_all_dividends()
-        logger.info(f"Obtenidos {len(dividends)} dividendos desde IBKR")
+        logger.info(f"Obtained {len(dividends)} dividends from IBKR")
 
         if dividends:
             send_dividend_email(dividends, today)
-            logger.info("Correo de dividendos enviado correctamente")
+            logger.info("Dividend email sent successfully")
         else:
-            logger.info("No se encontraron dividendos en el XML. No se envía correo.")
+            logger.info("No dividends found in XML. No email sent.")
             
     except Exception as e:
-        logger.error(f"Error en el servicio de dividendos: {str(e)}")
+        logger.error(f"Error in dividend service: {str(e)}")
 
 if __name__ == "__main__":
     main()

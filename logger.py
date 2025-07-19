@@ -2,12 +2,12 @@ import logging
 import os
 
 def setup_logger():
-    # Crear directorio de logs si no existe
+    # Create logs directory if it doesn't exist
     log_dir = "logs"
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
     
-    # Configurar logger
+    # Configure logger
     log_file = os.path.join(log_dir, "dividend_service.log")
     logging.basicConfig(
         filename=log_file,
@@ -16,7 +16,7 @@ def setup_logger():
         datefmt="%Y-%m-%d %H:%M:%S"
     )
     
-    # También mostrar logs en consola
+    # Also show logs in console
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")

@@ -8,7 +8,7 @@ from ibkr_client import IBKRFlexQuery, get_all_dividends, setup_ibkr_credentials
 
 
 class TestIBKRFlexQuery:
-    """Tests para la clase IBKRFlexQuery que interactúa con la API de IBKR."""
+    """Tests for the IBKRFlexQuery class that interacts with the IBKR API."""
     
     def setup_method(self):
         self.token = "test_token_123"
@@ -17,7 +17,7 @@ class TestIBKRFlexQuery:
     
     @patch('ibkr_client.requests.get')
     def test_request_query_execution_success(self, mock_get):
-        """Prueba que la solicitud de ejecución de una query devuelve un ReferenceCode."""
+        """Tests that the query execution request returns a ReferenceCode."""
         mock_response = Mock()
         mock_response.text = "<FlexStatementResponse><Status>Success</Status><ReferenceCode>12345</ReferenceCode></FlexStatementResponse>"
         mock_response.raise_for_status.return_value = None
@@ -30,19 +30,19 @@ class TestIBKRFlexQuery:
     
     @patch('ibkr_client.requests.get')
     def test_request_query_execution_error(self, mock_get):
-        """Prueba que se lanza una excepción si la API de IBKR devuelve un error."""
+        """Tests that an exception is raised if the IBKR API returns an error."""
         mock_response = Mock()
-        mock_response.text = "<FlexStatementResponse><Status>Fail</Status><ErrorMessage>Token inválido</ErrorMessage></FlexStatementResponse>"
+        mock_response.text = "<FlexStatementResponse><Status>Fail</Status><ErrorMessage>Invalid token</ErrorMessage></FlexStatementResponse>"
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
         
-        with pytest.raises(Exception, match="Error en IBKR: Token inválido"):
+        with pytest.raises(Exception, match="Error in IBKR: Invalid token"):
             self.client._request_query_execution(self.query_id, "3")
 
     @patch('ibkr_client.requests.get')
     @patch('ibkr_client.time.sleep', return_value=None)
     def test_get_query_results_retry_and_success(self, mock_sleep, mock_get):
-        """Prueba que el cliente reintenta si el informe está en progreso y luego tiene éxito."""
+        """Tests that the client retries if the report is in progress and then succeeds."""
         response_in_progress = Mock()
         response_in_progress.text = "Statement generation in progress"
         
@@ -59,7 +59,7 @@ class TestIBKRFlexQuery:
 
 
 class TestGetAllDividends:
-    """Tests para la función principal get_all_dividends."""
+    """Tests for the main get_all_dividends function."""
     
     @patch.dict(os.environ, {
         'IBKR_FLEX_TOKEN': 'test_token',
@@ -68,13 +68,13 @@ class TestGetAllDividends:
     @patch('ibkr_client.IBKRFlexQuery')
     def test_get_all_dividends_parses_multiple_sources(self, mock_client_class):
         """
-        Prueba que se procesen correctamente los dividendos de 'ChangeInDividendAccrual'
-        y 'CashTransaction' en una misma llamada.
+        Tests that dividends from 'ChangeInDividendAccrual'
+        and 'CashTransaction' are processed correctly in the same call.
         """
         mock_client = Mock()
         mock_client_class.return_value = mock_client
         
-        # CORRECCIÓN: activityDescription ahora contiene "dividend" para que el parser lo detecte.
+        # CORRECTION: activityDescription now contains "dividend" so the parser detects it.
         xml_response = """<?xml version="1.0" encoding="UTF-8"?>
         <FlexQueryResponse>
             <FlexStatements>
@@ -93,7 +93,7 @@ class TestGetAllDividends:
         
         result = get_all_dividends()
         
-        # AHORA SÍ: La aserción debe pasar porque se encuentran 2 dividendos.
+        # NOW IT'S OK: The assertion should pass because 2 dividends are found.
         assert len(result) == 2
         
         aapl_div = next(d for d in result if d['ticker'] == 'AAPL')
@@ -109,7 +109,7 @@ class TestGetAllDividends:
     @patch.dict(os.environ, {}, clear=True)
     @patch('ibkr_client._get_example_dividends')
     def test_get_all_dividends_no_credentials_fallback(self, mock_example):
-        """Prueba que se usen datos de ejemplo si no hay credenciales."""
+        """Tests that example data is used if there are no credentials."""
         mock_example.return_value = [{'ticker': 'TEST_EXAMPLE', 'dividendo_bruto': 100.0}]
         
         with patch('ibkr_client.logging.getLogger') as mock_logger:
@@ -118,7 +118,7 @@ class TestGetAllDividends:
             
             result = get_all_dividends()
             
-            mock_log.warning.assert_called_with("Token o Query ID no configurados, usando datos de ejemplo")
+            mock_log.warning.assert_called_with("Token or Query ID not configured, using example data")
             mock_example.assert_called_once_with()
             assert len(result) == 1
             assert result[0]['ticker'] == 'TEST_EXAMPLE'
@@ -130,7 +130,7 @@ class TestGetAllDividends:
     @patch('ibkr_client.IBKRFlexQuery')
     @patch('ibkr_client._get_example_dividends')
     def test_get_all_dividends_api_error_fallback(self, mock_example, mock_client_class):
-        """Prueba el fallback a datos de ejemplo si la llamada a la API falla."""
+        """Tests the fallback to example data if the API call fails."""
         mock_client = Mock()
         mock_client_class.return_value = mock_client
         mock_client.execute_query.side_effect = Exception("API Error")
@@ -145,10 +145,10 @@ class TestGetAllDividends:
 
 
 class TestGetExampleDividends:
-    """Tests para la función _get_example_dividends."""
+    """Tests for the _get_example_dividends function."""
     
     def test_get_example_dividends_returns_correct_data(self):
-        """Prueba que la función parsea el XML estático y devuelve los datos correctos."""
+        """Tests that the function parses the static XML and returns the correct data."""
         result = _get_example_dividends()
         
         assert len(result) == 2
@@ -165,18 +165,18 @@ class TestGetExampleDividends:
         
     @patch('ibkr_client.ET.fromstring', side_effect=Exception("XML parsing error"))
     def test_get_example_dividends_xml_error_returns_empty(self, mock_fromstring):
-        """Prueba que si el parseo del XML de ejemplo falla, devuelve una lista vacía."""
-        # La función actual propaga la excepción, así que testeamos eso.
+        """Tests that if parsing the example XML fails, it returns an empty list."""
+        # The current function propagates the exception, so we test for that.
         with pytest.raises(Exception, match="XML parsing error"):
              _get_example_dividends()
 
 
 class TestSetupIbkrCredentials:
-    """Tests para la función de ayuda setup_ibkr_credentials."""
+    """Tests for the setup_ibkr_credentials helper function."""
     
     @patch.dict(os.environ, {}, clear=True)
     def test_setup_ibkr_credentials_sets_env_vars(self):
-        """Verifica que la función establece correctamente las variables de entorno."""
+        """Checks that the function correctly sets the environment variables."""
         token = "new_token"
         query_id = "new_query_id"
         
@@ -187,3 +187,7 @@ class TestSetupIbkrCredentials:
         
         assert os.environ['IBKR_FLEX_TOKEN'] == token
         assert os.environ['IBKR_DIVIDENDS_QUERY_ID'] == query_id
+
+        # Clean up after the test
+        del os.environ['IBKR_FLEX_TOKEN']
+        del os.environ['IBKR_DIVIDENDS_QUERY_ID']

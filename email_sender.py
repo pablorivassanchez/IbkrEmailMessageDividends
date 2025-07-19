@@ -8,13 +8,13 @@ from typing import List, Dict
 
 def _format_date(date_str: str) -> str:
     """
-    Formatea la fecha para mostrar en el correo.
+    Formats the date for display in the email.
     
     Args:
-        date_str (str): Fecha en formato YYYY-MM-DD.
+        date_str (str): Date in YYYY-MM-DD format.
         
     Returns:
-        str: Fecha formateada.
+        str: Formatted date.
     """
     try:
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
@@ -28,15 +28,15 @@ def _format_date(date_str: str) -> str:
 
 def _get_dates_string(dividends: List[Dict], fallback_date: str) -> str:
     """
-    Genera un string con las fechas de los dividendos.
-    Si hay hasta 3 fechas distintas, las lista. Si hay más, muestra un rango.
+    Generates a string with the dividend dates.
+    If there are up to 3 distinct dates, it lists them. If more, it shows a range.
     
     Args:
-        dividends (List[Dict]): Lista de dividendos.
-        fallback_date (str): Fecha de respaldo en formato YYYY-MM-DD.
+        dividends (List[Dict]): List of dividends.
+        fallback_date (str): Fallback date in YYYY-MM-DD format.
         
     Returns:
-        str: String con la(s) fecha(s) formateada(s).
+        str: String with the formatted date(s).
     """
     if not dividends:
         return _format_date(fallback_date)
@@ -53,104 +53,104 @@ def _get_dates_string(dividends: List[Dict], fallback_date: str) -> str:
     elif len(formatted_dates) <= 3:
         return ", ".join(formatted_dates)
     else:
-        return f"{formatted_dates[0]} al {formatted_dates[-1]}"
+        return f"{formatted_dates[0]} to {formatted_dates[-1]}"
 
 
 def send_dividend_email(dividends: List[Dict], date: str):
     """
-    Envía un correo electrónico con los dividendos recibidos.
-    
+    Sends an email with the received dividends.
+
     Args:
-        dividends (List[Dict]): Lista de dividendos.
-        date (str): Fecha de referencia en formato YYYY-MM-DD, usada como fallback.
+        dividends (List[Dict]): List of dividends.
+        date (str): Reference date in YYYY-MM-DD format, used as a fallback.
     """
     logger = logging.getLogger(__name__)
     
     if not dividends:
-        logger.info("No hay dividendos para enviar")
+        logger.info("No dividends to send")
         return
     
     try:
-        # Configuración del correo desde variables de entorno
+        # Email configuration from environment variables
         smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
         smtp_port = int(os.getenv('SMTP_PORT', '587'))
         sender_email = os.getenv('SENDER_EMAIL')
         recipient_email = os.getenv('RECIPIENT_EMAIL')
 
-        # Usar credenciales específicas para la API de envío de correo
+        # Use specific credentials for the email sending API
         smtp_username = os.getenv("SMTP_USERNAME")
         smtp_password = os.getenv("SMTP_PASSWORD")
         
         if not all([sender_email, smtp_username, smtp_password, recipient_email]):
-            logger.error("Configuración de correo incompleta. Verifica las variables de entorno SENDER_EMAIL, RECIPIENT_EMAIL, SMTP_USERNAME y SMTP_PASSWORD.")
+            logger.error("Email configuration is incomplete. Check SENDER_EMAIL, RECIPIENT_EMAIL, SMTP_USERNAME, and SMTP_PASSWORD environment variables.")
             return
 
-        # Generar el string de fechas para el título
+        # Generate the date string for the title
         dates_str = _get_dates_string(dividends, date)
         
-        # Crear mensaje
+        # Create message
         message = MIMEMultipart("alternative")
         message["Subject"] = f"💰 Dividendos del {dates_str}"
         message["From"] = sender_email
         message["To"] = recipient_email
         
-        # Crear contenido HTML
+        # Create HTML content
         html_content = _create_html_content(dividends, dates_str)
         
-        # Adjuntar contenido HTML
+        # Attach HTML content
         html_part = MIMEText(html_content, "html")
         message.attach(html_part)
         
-        # Enviar correo
-        logger.info(f"Enviando correo a {recipient_email}")
+        # Send email
+        logger.info(f"Sending email to {recipient_email}")
         
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
             server.login(smtp_username, smtp_password)
             server.send_message(message)
         
-        logger.info("Correo enviado exitosamente")
+        logger.info("Email sent successfully")
         
     except Exception as e:
-        logger.error(f"Error al enviar correo: {str(e)}")
+        logger.error(f"Error sending email: {str(e)}")
 
 def _create_html_content(dividends: List[Dict], dates_display_str: str) -> str:
     """
-    Crea el contenido HTML para el correo electrónico.
-    
+    Creates the HTML content for the email.
+
     Args:
-        dividends (List[Dict]): Lista de dividendos.
-        dates_display_str (str): String con las fechas formateadas para mostrar.
-        
+        dividends (List[Dict]): List of dividends.
+        dates_display_str (str): String with formatted dates to display.
+
     Returns:
-        str: Contenido HTML formateado.
+        str: Formatted HTML content.
     """
     
-    # --- Cálculo de totales y tasas de cambio ---
+    # --- Calculation of totals and exchange rates ---
     total_gross_eur = 0
     total_tax_eur = 0
     total_net_eur = 0
-    exchange_rates = {}  # Para almacenar las tasas de cambio únicas
+    exchange_rates = {}  # To store unique exchange rates
 
-    # Calcular totales en EUR y recopilar tasas de cambio
+    # Calculate totals in EUR and collect exchange rates
     for d in dividends:
         fx_rate = d.get('fxRateToBase', 1)
         total_gross_eur += abs(d['dividendo_bruto']) * fx_rate
         total_tax_eur += abs(d['tax']) * fx_rate
         total_net_eur += abs(d['netAmount']) * fx_rate
         
-        # Guardar la tasa de cambio si no la tenemos ya
+        # Save the exchange rate if we don't have it already
         currency = d.get('currency')
         if currency and currency not in exchange_rates:
             exchange_rates[currency] = fx_rate
             
-    # Crear el string para el pie de página con todas las divisas
+    # Create the footer string with all currencies
     rate_strings = [f"1 {cur} = €{rate:.4f}" for cur, rate in exchange_rates.items()]
     footer_rates_text = " • ".join(rate_strings) if rate_strings else "No se encontraron tipos de cambio."
     
-    # --- Fin del cálculo ---
+    # --- End of calculation ---
 
-    # Crear filas de la tabla
+    # Create table rows
     table_rows = ""
     for dividend in dividends:
         fx_rate = dividend.get('fxRateToBase', 1)
@@ -158,7 +158,7 @@ def _create_html_content(dividends: List[Dict], dates_display_str: str) -> str:
         tax_eur = abs(dividend['tax']) * fx_rate
         net_eur = abs(dividend['netAmount']) * fx_rate
         
-        # Determinar el símbolo de la divisa
+        # Determine the currency symbol
         currency_symbol = "$" if dividend.get("currency") == "USD" else dividend.get("currency", "")
         
         table_rows += f"""
@@ -197,21 +197,21 @@ def _create_html_content(dividends: List[Dict], dates_display_str: str) -> str:
             
             <!-- Header -->
             <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center;">
-                <h1 style="margin: 0; font-size: 28px; font-weight: 300;">💰 Resumen de Dividendos</h1>
+                <h1 style="margin: 0; font-size: 28px; font-weight: 300;">💰 Dividend Summary</h1>
                 <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">{dates_display_str}</p>
             </div>
             
-            <!-- Summary Cards (total consolidado en EUR) -->
+            <!-- Summary Cards (consolidated total in EUR) -->
             <div style="padding: 30px; background-color: #f8f9fc;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
                     
                     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #27ae60;">
-                        <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Dividendo Bruto</h3>
+                        <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Gross Dividend</h3>
                         <p style="margin: 0; font-size: 24px; font-weight: 600; color: #27ae60;">€{total_gross_eur:.2f}</p>
                     </div>
                     
                     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #e74c3c;">
-                        <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Impuestos</h3>
+                        <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Taxes</h3>
                         <p style="margin: 0; font-size: 24px; font-weight: 600; color: #e74c3c;">€{total_tax_eur:.2f}</p>
                     </div>
                     
@@ -263,15 +263,15 @@ def _create_html_content(dividends: List[Dict], dates_display_str: str) -> str:
     return html_content
 
 
-# Ejemplo de uso para probar el script directamente
+# Example of use to test the script directly
 if __name__ == "__main__":
-    # Configurar logging para ver la salida en consola
+    # Configure logging to see console output
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     
-    # --- Datos de ejemplo con múltiples divisas y fechas ---
-    # Descomenta y modifica según necesites probar
+    # --- Example data with multiple currencies and dates ---
+    # Uncomment and modify as needed for testing
     
-    # Caso 1: Una sola fecha
+    # Case 1: Single date
     # test_dividends = [
     #     {
     #         "ticker": "AAPL", "fecha": "2025-07-15", "dividendo_bruto": 50.00, "tax": -7.50,
@@ -280,7 +280,7 @@ if __name__ == "__main__":
     # ]
     # date_to_test = "2025-07-15"
     
-    # Caso 2: Múltiples fechas (se listarán)
+    # Case 2: Multiple dates (will be listed)
     test_dividends = [
         {
             "ticker": "AAPL", "fecha": "2025-07-15", "dividendo_bruto": 50.00, "tax": -7.50,
@@ -293,7 +293,7 @@ if __name__ == "__main__":
     ]
     date_to_test = "2025-07-16"
     
-    # Caso 3: Muchas fechas (se mostrará un rango)
+    # Case 3: Many dates (a range will be shown)
     # test_dividends = [
     #     {"ticker": "A", "fecha": "2025-07-15", "dividendo_bruto": 10, "tax": -1, "netAmount": 9, "currency": "USD", "fxRateToBase": 0.92, "description": "Agilent"},
     #     {"ticker": "B", "fecha": "2025-07-16", "dividendo_bruto": 10, "tax": -1, "netAmount": 9, "currency": "USD", "fxRateToBase": 0.92, "description": "Barnes Group"},
@@ -303,6 +303,6 @@ if __name__ == "__main__":
     # date_to_test = "2025-07-18"
 
     
-    # Asegúrate de tener un .env con las credenciales para probar el envío real
-    # o la función se detendrá si no encuentra las variables.
+    # Make sure you have a .env file with credentials to test the actual sending
+    # or the function will stop if it doesn't find the variables.
     send_dividend_email(test_dividends, date_to_test)

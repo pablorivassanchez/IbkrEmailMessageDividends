@@ -5,15 +5,15 @@ from unittest.mock import Mock, patch
 import os
 from bs4 import BeautifulSoup
 
-# Importar las funciones a testear desde el módulo de la aplicación
+# Import the functions to be tested from the application module
 from email_sender import send_dividend_email, _create_html_content, _get_dates_string
 
 
 class TestSendDividendEmail:
-    """Tests para la función principal send_dividend_email."""
+    """Tests for the main send_dividend_email function."""
     
     def setup_method(self):
-        """Configuración inicial para cada test."""
+        """Initial setup for each test."""
         self.sample_dividends = [
             {
                 "ticker": "AAPL", "fecha": "2025-07-15", "dividendo_bruto": 50.00, "tax": -7.50,
@@ -27,25 +27,25 @@ class TestSendDividendEmail:
         self.test_date = "2025-07-15"
 
     def test_send_dividend_email_empty_dividends(self):
-        """Verifica que no se envíe correo si la lista de dividendos está vacía."""
+        """Checks that no email is sent if the dividend list is empty."""
         with patch('email_sender.logging.getLogger') as mock_logger:
             mock_log = Mock()
             mock_logger.return_value = mock_log
 
             send_dividend_email([], self.test_date)
 
-            mock_log.info.assert_called_with("No hay dividendos para enviar")
+            mock_log.info.assert_called_with("No dividends to send")
 
     @patch.dict(os.environ, {}, clear=True)
     def test_send_dividend_email_missing_config(self):
-        """Verifica que se registre un error si faltan variables de entorno."""
+        """Checks that an error is logged if environment variables are missing."""
         with patch('email_sender.logging.getLogger') as mock_logger:
             mock_log = Mock()
             mock_logger.return_value = mock_log
 
             send_dividend_email(self.sample_dividends, self.test_date)
 
-            expected_error_msg = "Configuración de correo incompleta. Verifica las variables de entorno SENDER_EMAIL, RECIPIENT_EMAIL, SMTP_USERNAME y SMTP_PASSWORD."
+            expected_error_msg = "Email configuration is incomplete. Check SENDER_EMAIL, RECIPIENT_EMAIL, SMTP_USERNAME, and SMTP_PASSWORD environment variables."
             mock_log.error.assert_called_with(expected_error_msg)
 
     @patch.dict(os.environ, {
@@ -58,7 +58,7 @@ class TestSendDividendEmail:
     })
     @patch('email_sender.smtplib.SMTP')
     def test_send_dividend_email_success(self, mock_smtp):
-        """Prueba un envío de correo exitoso de principio a fin."""
+        """Tests a successful email sending from start to finish."""
         mock_server = Mock()
         mock_smtp.return_value.__enter__.return_value = mock_server
 
@@ -74,11 +74,11 @@ class TestSendDividendEmail:
             mock_server.send_message.assert_called_once()
 
             sent_message = mock_server.send_message.call_args[0][0]
-            expected_subject = "💰 Dividendos del 15 de Julio de 2025"
+            expected_subject = "💰 Dividends for July 15, 2025"
             assert sent_message['Subject'] == expected_subject
 
-            mock_log.info.assert_any_call("Enviando correo a recipient@test.com")
-            mock_log.info.assert_any_call("Correo enviado exitosamente")
+            mock_log.info.assert_any_call("Sending email to recipient@test.com")
+            mock_log.info.assert_any_call("Email sent successfully")
 
     @patch.dict(os.environ, {
         'SMTP_SERVER': 'smtp.test.com',
@@ -90,7 +90,7 @@ class TestSendDividendEmail:
     })
     @patch('email_sender.smtplib.SMTP')
     def test_send_dividend_email_smtp_error(self, mock_smtp):
-        """Prueba el manejo de errores si la conexión SMTP falla."""
+        """Tests error handling if the SMTP connection fails."""
         mock_smtp.side_effect = Exception("SMTP connection failed")
 
         with patch('email_sender.logging.getLogger') as mock_logger:
@@ -99,7 +99,7 @@ class TestSendDividendEmail:
 
             send_dividend_email(self.sample_dividends, self.test_date)
 
-            mock_log.error.assert_called_with("Error al enviar correo: SMTP connection failed")
+            mock_log.error.assert_called_with("Error sending email: SMTP connection failed")
 
     @patch.dict(os.environ, {
         'SENDER_EMAIL': 'sender@test.com',
@@ -109,7 +109,7 @@ class TestSendDividendEmail:
     })
     @patch('email_sender.smtplib.SMTP')
     def test_send_dividend_email_default_smtp_config(self, mock_smtp):
-        """Prueba que se usen el servidor y puerto SMTP por defecto si no se especifican."""
+        """Tests that the default SMTP server and port are used if not specified."""
         mock_server = Mock()
         mock_smtp.return_value.__enter__.return_value = mock_server
 
@@ -120,10 +120,10 @@ class TestSendDividendEmail:
 
 
 class TestCreateHtmlContent:
-    """Tests para la función _create_html_content que genera el cuerpo del correo."""
+    """Tests for the _create_html_content function that generates the email body."""
     
     def setup_method(self):
-        """Configuración con datos de ejemplo para los tests de HTML."""
+        """Setup with sample data for HTML tests."""
         self.sample_dividends = [
             {
                 "ticker": "AAPL", "fecha": "2025-07-15", "dividendo_bruto": 50.00, "tax": -7.50,
@@ -134,29 +134,29 @@ class TestCreateHtmlContent:
                 "netAmount": 30.00, "currency": "GBP", "fxRateToBase": 1.17, "description": "HSBC HOLDINGS PLC"
             }
         ]
-        # CORRECCIÓN: Se define self.test_date para que esté disponible en la clase.
+        # CORRECTION: self.test_date is defined to be available in the class.
         self.test_date = "2025-07-16"
         self.dates_str = _get_dates_string(self.sample_dividends, self.test_date)
 
     def test_create_html_content_structure(self):
-        """Verifica que la estructura básica del HTML (header, body, etc.) sea correcta."""
+        """Checks that the basic HTML structure (header, body, etc.) is correct."""
         result = _create_html_content(self.sample_dividends, self.dates_str)
         soup = BeautifulSoup(result, "html.parser")
 
         assert soup.find("html") is not None
         assert soup.find("head") is not None
         assert soup.find("body") is not None
-        assert "💰 Resumen de Dividendos" in soup.find("h1").get_text()
-        assert "15 de Julio de 2025, 16 de Julio de 2025" in soup.get_text()
+        assert "💰 Dividend Summary" in soup.find("h1").get_text()
+        assert "July 15, 2025, July 16, 2025" in soup.get_text()
 
     def test_create_html_content_calculations(self):
-        """Verifica que los totales (bruto, neto, impuestos) en EUR se calculen y muestren correctamente."""
+        """Checks that the totals (gross, net, taxes) in EUR are calculated and displayed correctly."""
         result = _create_html_content(self.sample_dividends, self.dates_str)
         soup = BeautifulSoup(result, "html.parser")
 
-        # Bruto: (50 * 0.92) + (40 * 1.17) = 46 + 46.8 = 92.80
-        # Impuestos: (7.50 * 0.92) + (10.00 * 1.17) = 6.9 + 11.7 = 18.60
-        # Neto: (42.50 * 0.92) + (30.00 * 1.17) = 39.1 + 35.1 = 74.20
+        # Gross: (50 * 0.92) + (40 * 1.17) = 46 + 46.8 = 92.80
+        # Taxes: (7.50 * 0.92) + (10.00 * 1.17) = 6.9 + 11.7 = 18.60
+        # Net: (42.50 * 0.92) + (30.00 * 1.17) = 39.1 + 35.1 = 74.20
         
         text = soup.get_text()
         assert "€92.80" in text
@@ -166,7 +166,7 @@ class TestCreateHtmlContent:
         assert "1 GBP = €1.1700" in text
 
     def test_create_html_content_table_rows(self):
-        """Verifica que la tabla de detalles contenga las filas correctas para cada dividendo."""
+        """Checks that the details table contains the correct rows for each dividend."""
         result = _create_html_content(self.sample_dividends, self.dates_str)
         soup = BeautifulSoup(result, "html.parser")
         
@@ -190,10 +190,10 @@ class TestCreateHtmlContent:
         assert "€46.80" in row2_text
 
     def test_create_html_content_footer(self):
-        """Verifica que el pie de página muestre el recuento correcto de dividendos."""
+        """Checks that the footer shows the correct count of dividends."""
         one_dividend = [self.sample_dividends[0]]
         date_str = _get_dates_string(one_dividend, self.test_date)
         result = _create_html_content(one_dividend, date_str)
         text = BeautifulSoup(result, "html.parser").get_text()
 
-        assert "1 dividendos recibidos" in text
+        assert "1 dividends received" in text

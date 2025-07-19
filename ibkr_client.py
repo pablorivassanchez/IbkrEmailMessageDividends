@@ -12,7 +12,7 @@ class IBKRFlexQuery:
     def execute_query(self, query_id, version="3"):
         reference_code = self._request_query_execution(query_id, version)
         if not reference_code:
-            raise Exception("Error al solicitar la ejecución de la query")
+            raise Exception("Error requesting query execution")
         return self._get_query_results(reference_code, version)
     
     def _request_query_execution(self, query_id, version):
@@ -27,13 +27,13 @@ class IBKRFlexQuery:
             response.raise_for_status()
             root = ET.fromstring(response.text)
             if root.find('.//ErrorMessage') is not None:
-                raise Exception(f"Error en IBKR: {root.find('.//ErrorMessage').text}")
+                raise Exception(f"Error in IBKR: {root.find('.//ErrorMessage').text}")
             reference_code = root.find('.//ReferenceCode')
             if reference_code is not None:
                 return reference_code.text
-            raise Exception("No se recibió reference code")
+            raise Exception("No reference code received")
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Error en la solicitud: {e}")
+            raise Exception(f"Request error: {e}")
     
     def _get_query_results(self, reference_code, version, max_attempts=30):
         url = f"{self.base_url}/FlexStatementService.GetStatement"
@@ -51,23 +51,23 @@ class IBKRFlexQuery:
                     continue
                 root = ET.fromstring(response.text)
                 if root.find('.//ErrorMessage') is not None:
-                    raise Exception(f"Error en IBKR: {root.find('.//ErrorMessage').text}")
+                    raise Exception(f"Error in IBKR: {root.find('.//ErrorMessage').text}")
                 return response.text
             except requests.exceptions.RequestException as e:
-                raise Exception(f"Error en la solicitud: {e}")
-        raise Exception("Timeout: El statement no se generó en el tiempo esperado")
+                raise Exception(f"Request error: {e}")
+        raise Exception("Timeout: Statement was not generated in the expected time")
 
 def get_all_dividends() -> list:
-    """Obtiene todos los dividendos desde la Flex Query de IBKR, sin filtrar por fecha"""
+    """Gets all dividends from the IBKR Flex Query, without filtering by date"""
     logger = logging.getLogger(__name__)
-    logger.info("Consultando TODOS los dividendos desde IBKR API")
+    logger.info("Querying ALL dividends from IBKR API")
     
     try:
         TOKEN = os.getenv('IBKR_FLEX_TOKEN')
         QUERY_ID = os.getenv('IBKR_DIVIDENDS_QUERY_ID')
         
         if not TOKEN or not QUERY_ID:
-            logger.warning("Token o Query ID no configurados, usando datos de ejemplo")
+            logger.warning("Token or Query ID not configured, using example data")
             return _get_example_dividends()
         
         client = IBKRFlexQuery(TOKEN)
@@ -93,7 +93,7 @@ def get_all_dividends() -> list:
             }
             dividends.append(dividend)
 
-        # También incluir dividendos en CashTransaction (si existen)
+        # Also include dividends from CashTransaction (if they exist)
         for cash_txn in root.findall(".//CashTransaction"):
             activity_description = cash_txn.get("activityDescription", "")
             if "dividend" in activity_description.lower():
@@ -114,18 +114,18 @@ def get_all_dividends() -> list:
                 }
                 dividends.append(dividend)
 
-        logger.info(f"Encontrados {len(dividends)} dividendos en total")
+        logger.info(f"Found {len(dividends)} dividends in total")
         return dividends
 
     except Exception as e:
-        logger.error(f"Error al obtener dividendos desde IBKR: {str(e)}")
+        logger.error(f"Error getting dividends from IBKR: {str(e)}")
         return _get_example_dividends()
 
 def _get_example_dividends() -> list:
     logger = logging.getLogger(__name__)
-    logger.info("Usando datos de ejemplo")
+    logger.info("Using example data")
     xml_data = """
-    <FlexQueryResponse queryName="Dividendos Diarios" type="AF">
+    <FlexQueryResponse queryName="Daily Dividends" type="AF">
         <FlexStatements count="1">
             <FlexStatement accountId="" fromDate="20250715" toDate="20250715" period="LastBusinessDay" whenGenerated="20250716;210552">
                 <ChangeInDividendAccruals>
