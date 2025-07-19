@@ -1,171 +1,171 @@
 # IBKR Dividend Email Notifier
 
-Este servicio automatizado se conecta a la API Flex Web Service de Interactive Brokers (IBKR) para obtener un informe de los dividendos recibidos, genera un resumen detallado en formato HTML y lo envía por correo electrónico.
+This automated service connects to the Interactive Brokers (IBKR) Flex Web Service API to fetch a report of received dividends, generates a detailed HTML summary, and sends it via email.
 
-## Características
+## Features
 
-- **Conexión con IBKR**: Utiliza el Flex Web Service de IBKR para obtener datos de dividendos de forma segura.
-- **Análisis Completo**: Extrae información tanto de `ChangeInDividendAccrual` (dividendos devengados) como de `CashTransaction` (dividendos pagados en efectivo).
-- **Informe HTML Profesional**: Genera un correo electrónico visualmente atractivo y fácil de leer con:
-  - Un resumen de los totales (bruto, impuestos, neto) consolidados en EUR.
-  - Una tabla detallada con cada dividendo, mostrando los importes tanto en su divisa original como en EUR.
-  - Manejo de múltiples divisas y visualización de los tipos de cambio utilizados.
-- **Alta Configuración**: Toda la configuración (credenciales de API, SMTP) se gestiona a través de un archivo `.env` para mayor seguridad y facilidad de mantenimiento.
-- **Logging Integrado**: Registra la actividad del servicio en la consola y en un archivo (`logs/dividend_service.log`) para facilitar la depuración.
-- **Probado con Pytest**: Incluye una suite de tests para asegurar la fiabilidad del código.
+- **IBKR Connection**: Securely fetches dividend data using IBKR's Flex Web Service.
+- **Comprehensive Analysis**: Extracts information from both `ChangeInDividendAccrual` (accrued dividends) and `CashTransaction` (cash-paid dividends).
+- **Professional HTML Report**: Generates a visually appealing and easy-to-read email with:
+  - A summary of totals (gross, tax, net) consolidated in EUR.
+  - A detailed table for each dividend, showing amounts in both their original currency and EUR.
+  - Handling of multiple currencies and display of the exchange rates used.
+- **Highly Configurable**: All settings (API credentials, SMTP) are managed through a `.env` file for better security and ease of maintenance.
+- **Integrated Logging**: Logs service activity to the console and a file (`logs/dividend_service.log`) for easy debugging.
+- **Pytest Tested**: Includes a test suite to ensure code reliability.
 
-## Vista Previa del Email
+## Email Preview
 
-El correo generado tiene un diseño limpio y moderno. Incluye:
+The generated email has a clean and modern design. It includes:
 
-1.  **Cabecera**: Con el título "Resumen de Dividendos" y el rango de fechas correspondiente.
-2.  **Tarjetas de Resumen**: Muestran el total de dividendo bruto, impuestos y dividendo neto, todo consolidado en Euros.
-3.  **Tabla Detallada**: Una tabla con cada dividendo recibido, especificando el Ticker, la Empresa, y los desgloses de Bruto, Impuestos y Neto tanto en la moneda original (USD, GBP, etc.) como su equivalente en EUR.
-4.  **Pie de Página**: Indica el número total de dividendos procesados y los tipos de cambio aplicados en el informe.
+1.  **Header**: With the title "Dividend Summary" and the corresponding date range.
+2.  **Summary Cards**: Displaying the total gross dividend, taxes, and net dividend, all consolidated in Euros.
+3.  **Detailed Table**: A table with each dividend received, specifying the Ticker, Company, and breakdowns of Gross, Tax, and Net in both the original currency (USD, GBP, etc.) and its EUR equivalent.
+4.  **Footer**: Indicates the total number of dividends processed and the exchange rates applied in the report.
 
-## Instalación
+## Installation
 
-1.  **Clona el repositorio:**
+1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/tu-usuario/IbkrTelegramMessageDividendos.git
+    git clone https://github.com/your-username/IbkrTelegramMessageDividendos.git
     cd IbkrTelegramMessageDividendos
     ```
 
-2.  **Crea y activa un entorno virtual (recomendado):**
+2.  **Create and activate a virtual environment (recommended):**
 
     ```bash
     python -m venv venv
     ```
 
-    - **En Windows:**
+    - **On Windows:**
       ```bash
       venv\Scripts\activate
       ```
-    - **En macOS/Linux:**
+    - **On macOS/Linux:**
       ```bash
       source venv/bin/activate
       ```
 
-3.  **Instala las dependencias:**
+3.  **Install the dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
 
-## Configuración
+## Configuration
 
-Para que el servicio funcione, es crucial configurar correctamente las variables de entorno.
+To make the service work, it is crucial to configure the environment variables correctly.
 
-1.  **Crea un archivo `.env`** en la raíz del proyecto.
+1.  **Create a `.env` file** in the project root.
 
-2.  **Añade y configura las siguientes variables en tu archivo `.env`:**
+2.  **Add and configure the following variables in your `.env` file:**
 
     ```env
-    #--- Credenciales de Interactive Brokers ---#
-    # Tu token del Flex Web Service de IBKR
-    IBKR_FLEX_TOKEN="TU_TOKEN_AQUI"
-    # El ID de tu Flex Query para dividendos
-    IBKR_DIVIDENDS_QUERY_ID="TU_ID_DE_QUERY_AQUI"
+    #--- Interactive Brokers Credentials ---#
+    # Your IBKR Flex Web Service token
+    IBKR_FLEX_TOKEN="YOUR_TOKEN_HERE"
+    # Your Flex Query ID for dividends
+    IBKR_DIVIDENDS_QUERY_ID="YOUR_QUERY_ID_HERE"
 
-    #--- Configuración de Email (SMTP) ---#
-    # Servidor SMTP de tu proveedor de correo (ej. smtp.gmail.com)
+    #--- Email (SMTP) Configuration ---#
+    # SMTP server of your email provider (e.g., smtp.gmail.com)
     SMTP_SERVER="smtp.gmail.com"
-    # Puerto SMTP (587 para TLS es lo más común)
+    # SMTP port (587 for TLS is the most common)
     SMTP_PORT="587"
-    # Email desde el que se enviarán los correos
-    SENDER_EMAIL="tu_email@gmail.com"
-    # Usuario para la autenticación SMTP (suele ser el mismo email)
-    SMTP_USERNAME="tu_email@gmail.com"
-    # Contraseña de tu email o, preferiblemente, una contraseña de aplicación
-    SMTP_PASSWORD="TU_CONTRASENA_DE_APLICACION"
-    # Email que recibirá el informe
-    RECIPIENT_EMAIL="email_destinatario@dominio.com"
+    # Email from which the emails will be sent
+    SENDER_EMAIL="your_email@gmail.com"
+    # Username for SMTP authentication (usually the same as the email)
+    SMTP_USERNAME="your_email@gmail.com"
+    # Your email password or, preferably, an app password
+    SMTP_PASSWORD="YOUR_APP_PASSWORD"
+    # Email that will receive the report
+    RECIPIENT_EMAIL="recipient_email@domain.com"
     ```
 
-### ¿Cómo obtener las credenciales de IBKR?
+### How to get IBKR credentials?
 
 1.  **`IBKR_FLEX_TOKEN`**:
 
-    - Inicia sesión en **Gestión de Cuenta** (Account Management) en la web de Interactive Brokers.
-    - Ve a **Configuración > Informes de Cuenta > Servicio Web Flex** (Settings > Account Reporting > Flex Web Service).
-    - Activa el servicio y genera un nuevo token. Copia el token de 256 caracteres.
+    - Log in to **Account Management** on the Interactive Brokers website.
+    - Go to **Settings > Account Reporting > Flex Web Service**.
+    - Enable the service and generate a new token. Copy the 256-character token.
 
 2.  **`IBKR_DIVIDENDS_QUERY_ID`**:
-    - En la misma sección de **Informes de Cuenta**, ve a **Consultas Flex** (Flex Queries).
-    - Crea una nueva **Consulta Flex de Actividad** (Activity Flex Query).
-    - En la sección **"Cambios en los Dividendos Devengados"** (`Change in Dividend Accruals`), selecciona los campos: `date`, `symbol`, `description`, `grossAmount`, `tax`, `netAmount`, `currency`, `fxRateToBase`.
-    - En la sección **"Transacciones en Efectivo"** (`Cash Transactions`), selecciona los campos: `dateTime`, `symbol`, `description`, `amount`, `currency`, `fxRateToBase`, `activityDescription`.
-    - Guarda la consulta y copia el número de ID que se le asigna.
+    - In the same **Account Reporting** section, go to **Flex Queries**.
+    - Create a new **Activity Flex Query**.
+    - In the **"Change in Dividend Accruals"** section, select the fields: `date`, `symbol`, `description`, `grossAmount`, `tax`, `netAmount`, `currency`, `fxRateToBase`.
+    - In the **"Cash Transactions"** section, select the fields: `dateTime`, `symbol`, `description`, `amount`, `currency`, `fxRateToBase`, `activityDescription`.
+    - Save the query and copy the assigned ID number.
 
-> **¡Importante!** Si usas Gmail, se recomienda encarecidamente generar una **"Contraseña de Aplicación"** en la configuración de seguridad de tu cuenta de Google y usarla como `SMTP_PASSWORD` en lugar de tu contraseña principal.
+> **Important!** If you use Gmail, it is strongly recommended to generate an **"App Password"** in your Google account security settings and use it as `SMTP_PASSWORD` instead of your main password.
 
-## Uso
+## Usage
 
-Para ejecutar el servicio manualmente, simplemente corre el script principal:
+To run the service manually, simply run the main script:
 
 ```bash
 python main.py
 ```
 
-Esto ejecutará el proceso completo: obtendrá los datos de dividendos de IBKR, generará el informe y enviará el correo electrónico.
+This will execute the entire process: it will get the dividend data from IBKR, generate the report, and send the email.
 
-### Automatización (Cron Job)
+### Automation (Cron Job)
 
-Para que el script se ejecute automáticamente todos los días, puedes configurarlo como un `cron job` en Linux/macOS.
+To have the script run automatically every day, you can set it up as a `cron job` on Linux/macOS.
 
-1.  Abre el editor de crontab:
+1.  Open the crontab editor:
     ```bash
     crontab -e
     ```
-2.  Añade una línea para ejecutar el script a una hora determinada (por ejemplo, a las 8 AM todos los días), asegurándote de usar rutas absolutas:
+2.  Add a line to run the script at a specific time (e.g., at 8 AM every day), making sure to use absolute paths:
     ```cron
     # m h  dom mon dow   command
-    0 8 * * * /ruta/absoluta/a/tu/venv/bin/python /ruta/absoluta/a/tu/proyecto/main.py >> /ruta/absoluta/a/tu/proyecto/logs/cron.log 2>&1
+    0 8 * * * /absolute/path/to/your/venv/bin/python /absolute/path/to/your/project/main.py >> /absolute/path/to/your/project/logs/cron.log 2>&1
     ```
-    Esto ejecuta el script y redirige cualquier salida o error a un archivo de log específico para el cron job.
+    This runs the script and redirects any output or errors to a specific log file for the cron job.
 
-## Ejecución de Tests
+## Running Tests
 
-El proyecto incluye tests para validar la lógica del cliente de IBKR y del generador de correos. Para ejecutarlos:
+The project includes tests to validate the logic of the IBKR client and the email generator. To run them:
 
 ```bash
 pytest -v
 ```
 
-### Automatización con GitHub Actions
+### Automation with GitHub Actions
 
-Para automatizar la ejecución del script diariamente usando GitHub Actions, sigue estos pasos:
+To automate the daily execution of the script using GitHub Actions, follow these steps:
 
-#### 1. Estructura del Proyecto
+#### 1. Project Structure
 
-Asegúrate de que tu repositorio tenga esta estructura:
+Make sure your repository has this structure:
 
 ```
-tu-repositorio/
+your-repository/
 ├── .github/
 │   └── workflows/
-│       └── dividendos.yml
+│       └── dividends.yml
 ├── main.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
 ```
 
-#### 2. Crear el Workflow
+#### 2. Create the Workflow
 
-Crea el archivo `.github/workflows/dividendos.yml` con el siguiente contenido:
+Create the file `.github/workflows/dividends.yml` with the following content:
 
 ```yaml
-name: Dividendos IBKR Daily
+name: Daily IBKR Dividends
 
 on:
   schedule:
-    # Ejecutar todos los días a las 08:00 UTC (09:00 CET/10:00 CEST)
+    # Run every day at 08:00 UTC (09:00 CET/10:00 CEST)
     - cron: '0 8 * * *'
-  workflow_dispatch:  # Permite ejecución manual
+  workflow_dispatch:  # Allows manual execution
 
 jobs:
-  run-dividendos:
+  run-dividends:
     runs-on: ubuntu-latest
     
     steps:
@@ -182,7 +182,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
-    - name: Run dividendos script
+    - name: Run dividends script
       env:
         IBKR_FLEX_TOKEN: ${{ secrets.IBKR_FLEX_TOKEN }}
         IBKR_DIVIDENDS_QUERY_ID: ${{ secrets.IBKR_DIVIDENDS_QUERY_ID }}
@@ -199,84 +199,84 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: dividendos-logs
+        name: dividends-logs
         path: |
           logs/*.log
           *.log
         retention-days: 7
 ```
 
-#### 3. Configurar Secrets
+#### 3. Configure Secrets
 
-Para mantener tus credenciales seguras, debes configurar GitHub Secrets:
+To keep your credentials secure, you must configure GitHub Secrets:
 
-1. Ve a tu repositorio en GitHub
-2. Navega a **Settings** → **Secrets and variables** → **Actions**
-3. Haz clic en **"New repository secret"** y añade los siguientes secrets:
+1. Go to your repository on GitHub
+2. Navigate to **Settings** → **Secrets and variables** → **Actions**
+3. Click on **"New repository secret"** and add the following secrets:
 
-| Secret Name | Descripción |
-|-------------|-------------|
-| `IBKR_FLEX_TOKEN` | Tu token del Flex Web Service de IBKR |
-| `IBKR_DIVIDENDS_QUERY_ID` | El ID de tu Flex Query para dividendos |
-| `SMTP_SERVER` | Servidor SMTP (ej: smtp.gmail.com) |
-| `SMTP_PORT` | Puerto SMTP (ej: 587) |
-| `SENDER_EMAIL` | Email desde el que se enviarán los correos |
-| `SMTP_USERNAME` | Usuario para autenticación SMTP |
-| `SMTP_PASSWORD` | Contraseña de email o contraseña de aplicación |
-| `RECIPIENT_EMAIL` | Email que recibirá el informe |
+| Secret Name | Description |
+|---|---|
+| `IBKR_FLEX_TOKEN` | Your IBKR Flex Web Service token |
+| `IBKR_DIVIDENDS_QUERY_ID` | Your Flex Query ID for dividends |
+| `SMTP_SERVER` | SMTP server (e.g., smtp.gmail.com) |
+| `SMTP_PORT` | SMTP port (e.g., 587) |
+| `SENDER_EMAIL` | Email from which the emails will be sent |
+| `SMTP_USERNAME` | Username for SMTP authentication |
+| `SMTP_PASSWORD` | Email password or app password |
+| `RECIPIENT_EMAIL` | Email that will receive the report |
 
-#### 4. Personalizar el Horario
+#### 4. Customize the Schedule
 
-El workflow está configurado para ejecutarse diariamente a las 08:00 UTC. Para cambiar el horario, modifica la línea del cron:
+The workflow is configured to run daily at 08:00 UTC. To change the schedule, modify the cron line:
 
 ```yaml
-# Formato: 'minuto hora día mes día_semana'
-# Ejemplos:
-- cron: '0 8 * * *'     # Diario a las 08:00 UTC
-- cron: '30 7 * * 1-5'  # Días laborables a las 07:30 UTC
-- cron: '0 9 * * 1'     # Solo los lunes a las 09:00 UTC
+# Format: 'minute hour day month day_of_week'
+# Examples:
+- cron: '0 8 * * *'     # Daily at 08:00 UTC
+- cron: '30 7 * * 1-5'  # Weekdays at 07:30 UTC
+- cron: '0 9 * * 1'     # Only on Mondays at 09:00 UTC
 ```
 
-**Conversión de horarios:**
-- Para España: UTC+1 (invierno) / UTC+2 (verano)
-- Si quieres ejecución a las 09:00 española, usa `'0 8 * * *'` (invierno) o `'0 7 * * *'` (verano)
+**Timezone Conversion:**
+- For Spain: UTC+1 (winter) / UTC+2 (summer)
+- If you want execution at 09:00 Spanish time, use `'0 8 * * *'` (winter) or `'0 7 * * *'` (summer)
 
-#### 5. Ventajas de GitHub Actions
+#### 5. Advantages of GitHub Actions
 
-✅ **Gratuito**: 2,000 minutos/mes para repositorios públicos
-✅ **Sin restricciones de red**: Acceso completo a internet (sin problemas con IBKR)
-✅ **Ejecución confiable**: Infraestructura robusta de GitHub
-✅ **Logs detallados**: Historial completo de ejecuciones
-✅ **Ejecución manual**: Botón para ejecutar cuando necesites
-✅ **Notificaciones**: Emails automáticos si falla la ejecución
+✅ **Free**: 2,000 minutes/month for public repositories
+✅ **No network restrictions**: Full internet access (no issues with IBKR)
+✅ **Reliable execution**: Robust GitHub infrastructure
+✅ **Detailed logs**: Complete history of executions
+✅ **Manual execution**: Button to run when you need
+✅ **Notifications**: Automatic emails if the execution fails
 
-#### 6. Probar el Workflow
+#### 6. Test the Workflow
 
-Una vez configurado:
+Once configured:
 
-1. Haz push de los cambios a tu repositorio
-2. Ve a la pestaña **Actions** en GitHub
-3. Selecciona tu workflow "Dividendos IBKR Daily"
-4. Haz clic en **"Run workflow"** para probarlo manualmente
-5. Revisa los logs para verificar que funciona correctamente
+1. Push the changes to your repository
+2. Go to the **Actions** tab on GitHub
+3. Select your "Daily IBKR Dividends" workflow
+4. Click on **"Run workflow"** to test it manually
+5. Review the logs to verify that it works correctly
 
-#### 7. Monitoreo y Logs
+#### 7. Monitoring and Logs
 
-- Los logs se guardan automáticamente como artifacts en GitHub
-- Se conservan durante 7 días
-- Puedes descargarlos desde la pestaña Actions → tu ejecución → Artifacts
-- GitHub te notificará por email si el workflow falla
+- Logs are automatically saved as artifacts on GitHub
+- They are kept for 7 days
+- You can download them from the Actions tab → your execution → Artifacts
+- GitHub will notify you by email if the workflow fails
 
-#### 8. Consideraciones Importantes
+#### 8. Important Considerations
 
-⚠️ **Repositorios inactivos**: GitHub puede pausar workflows en repos sin actividad durante 60 días
-⚠️ **Límites de tiempo**: Cada job tiene un límite de 6 horas
-⚠️ **Retrasos**: Los workflows programados pueden tener hasta 15 minutos de retraso en horarios pico
+⚠️ **Inactive repositories**: GitHub may pause workflows in repos with no activity for 60 days
+⚠️ **Time limits**: Each job has a limit of 6 hours
+⚠️ **Delays**: Scheduled workflows can have up to 15 minutes of delay during peak hours
 
-#### Migración desde Cron Job Local
+#### Migration from Local Cron Job
 
-Si actualmente usas un cron job local, GitHub Actions ofrece:
-- Mayor confiabilidad (no depende de que tu máquina esté encendida)
-- Mejor mantenimiento (historial de ejecuciones)
-- Notificaciones automáticas de errores
-- Acceso desde cualquier lugar
+If you are currently using a local cron job, GitHub Actions offers:
+- Greater reliability (does not depend on your machine being on)
+- Better maintenance (history of executions)
+- Automatic error notifications
+- Access from anywhere
